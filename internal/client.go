@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"log"
@@ -7,9 +7,10 @@ import (
 )
 
 type Client struct {
-	conn *websocket.Conn
-	Send chan (SMessage)
-	hub  *Hub
+	Conn   *websocket.Conn
+	Send   chan (SMessage)
+	Hub    *Hub
+	Canvas *Canvas
 }
 
 // Implementing the interface Subscriber.
@@ -20,11 +21,11 @@ func (c *Client) Notify(msg SMessage) {
 func (c Client) HandleIncoming() {
 	for {
 		select {
-		case msg := <-c.hub.Broadcast:
-			bmsg, err := pack(msg, &appState)
+		case msg := <-c.Hub.Broadcast:
+			bmsg, err := pack(msg, c.Canvas)
 			if err != nil {
 				log.Printf("Got an invalid message from the hub. Please investigate.\n")
-			} else if err := c.conn.WriteMessage(websocket.BinaryMessage, bmsg) != nil; err {
+			} else if err := c.Conn.WriteMessage(websocket.BinaryMessage, bmsg) != nil; err {
 				log.Printf("Could not write message: %v\n", err)
 			}
 		}
@@ -33,22 +34,22 @@ func (c Client) HandleIncoming() {
 
 func (c Client) HandleSocketIncoming() {
 	for {
-		msgType, msg, err := c.conn.ReadMessage()
+		msgType, msg, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
 				log.Printf("The client disconnected: %v\n", err)
-				c.hub.Deregister <- &c
+				c.Hub.Deregister <- &c
 				return
 			} else {
 				log.Printf("Could not read message: %v\n", err)
 			}
 		}
 		if msgType == websocket.BinaryMessage {
-			smsg, err := unpack(msg, &appState)
+			smsg, err := unpack(msg, c.Canvas)
 			if err != nil {
-				log.Printf("Got an invalid message from client %s: %v\n", c.conn.RemoteAddr().String(), err)
+				log.Printf("Got an invalid message from client %s: %v\n", c.Conn.RemoteAddr().String(), err)
 			} else {
-				c.hub.Broadcast <- smsg
+				c.Hub.Broadcast <- smsg
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"encoding/binary"
@@ -10,7 +10,7 @@ type SMessage struct {
     color SColor
 }
 
-func pack(msg SMessage, a *AppState) ([]byte, error) {
+func pack(msg SMessage, a *Canvas) ([]byte, error) {
     if msg.pos > a.width * a.height {
         return nil, errors.New("Could not pack into byte array due to incorrect dimensions")
     } else if !isValidColor(msg.color) {
@@ -23,7 +23,7 @@ func pack(msg SMessage, a *AppState) ([]byte, error) {
     return packed, nil
 }
 
-func unpack(packed []byte, a *AppState) (SMessage, error) {
+func unpack(packed []byte, a *Canvas) (SMessage, error) {
     pos := binary.LittleEndian.Uint32(packed[:4])
     color := SColor(packed[4])
 

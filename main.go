@@ -3,21 +3,16 @@ package main
 import (
 	"log"
 	"net/http"
-	"space/primitive"
+	. "space/internal"
 
 	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{}
 
-var appState = NewCanvas(512, 512)
+var canvas = NewCanvas(512, 512)
 
-var hub = Hub{
-	Broadcast:   make(chan SMessage, 128),
-	Register:    make(chan primitive.Subscriber[SMessage]),
-	Deregister:  make(chan primitive.Subscriber[SMessage]),
-	subscribers: make(map[primitive.Subscriber[SMessage]]bool),
-}
+var hub = InitHub()
 
 func handleConnection(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -25,7 +20,12 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Could not upgrade connection: %v\n", err)
 	}
 
-	c := Client{conn: conn, Send: make(chan (SMessage), 8)}
+	c := Client{
+		Send:   make(chan (SMessage), 8),
+		Conn:   conn,
+		Hub:    hub,
+		Canvas: &canvas,
+	}
 
 	// Register client
 	hub.Register <- &c
@@ -35,7 +35,7 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	hub.Register <- appState
+	hub.Register <- canvas
 	http.HandleFunc("/ws", handleConnection)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
