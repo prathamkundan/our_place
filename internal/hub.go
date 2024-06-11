@@ -18,14 +18,16 @@ type Hub struct {
 	Subscribers map[primitive.Subscriber[SMessage]]bool
 }
 
-func InitHub() *Hub {
-	return &Hub{
+func SetupHub() *Hub {
+	hub := &Hub{
 		Broadcast:   make(chan SMessage, 128),
 		Register:    make(chan primitive.Subscriber[SMessage]),
 		Deregister:  make(chan primitive.Subscriber[SMessage]),
 		Subscribers: make(map[primitive.Subscriber[SMessage]]bool),
 	}
+	go hub.HandleMessage()
 
+	return hub
 }
 
 func (h Hub) HandleMessage() {

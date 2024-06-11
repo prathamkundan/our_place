@@ -12,7 +12,7 @@ var upgrader = websocket.Upgrader{}
 
 var canvas = NewCanvas(512, 512)
 
-var hub = InitHub()
+var hub = SetupHub()
 
 func handleConnection(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -20,22 +20,17 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Could not upgrade connection: %v\n", err)
 	}
 
-	c := Client{
-		Send:   make(chan (SMessage), 8),
-		Conn:   conn,
-		Hub:    hub,
-		Canvas: &canvas,
+	err = SetupClient(conn, hub, canvas)
+	if err != nil {
+		log.Printf("Could not set up client for: %s", conn.RemoteAddr())
 	}
-
-	// Register client
-	hub.Register <- &c
-
-	go c.HandleIncoming()
-	go c.HandleSocketIncoming()
 }
 
 func main() {
+    // Maybe replace with a Register function that can call the handler for the client
 	hub.Register <- canvas
+    go canvas.HandleIncoming()
+
 	http.HandleFunc("/ws", handleConnection)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

@@ -11,11 +11,36 @@ type Client struct {
 	Send   chan (SMessage)
 	Hub    *Hub
 	Canvas *Canvas
+
+	interrupt chan bool
 }
 
 // Implementing the interface Subscriber.
 func (c *Client) Notify(msg SMessage) {
 	c.Send <- msg
+}
+
+func SetupClient(conn *websocket.Conn, hub *Hub, canvas *Canvas) error {
+	c := Client{
+		Send:   make(chan (SMessage), 8),
+		Conn:   conn,
+		Hub:    hub,
+		Canvas: canvas,
+	}
+
+	c.Hub.Register <- &c
+    err := c.Conn.WriteMessage(websocket.BinaryMessage, c.Canvas.PackCanvas())
+	if err != nil {
+		log.Printf("Could not send the initial Canvas")
+		// Closing the connection
+		c.Conn.Close()
+		return err
+	}
+
+	go c.HandleIncoming()
+	go c.HandleSocketIncoming()
+
+    return nil
 }
 
 func (c Client) HandleIncoming() {
@@ -28,6 +53,9 @@ func (c Client) HandleIncoming() {
 			} else if err := c.Conn.WriteMessage(websocket.BinaryMessage, bmsg) != nil; err {
 				log.Printf("Could not write message: %v\n", err)
 			}
+		case <-c.interrupt:
+			log.Printf("%s Deregistered from hub. Stopping.", c.Conn.RemoteAddr())
+			return
 		}
 	}
 }
@@ -39,6 +67,7 @@ func (c Client) HandleSocketIncoming() {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
 				log.Printf("The client disconnected: %v\n", err)
 				c.Hub.Deregister <- &c
+				c.interrupt <- true
 				return
 			} else {
 				log.Printf("Could not read message: %v\n", err)
