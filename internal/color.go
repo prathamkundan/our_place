@@ -3,24 +3,24 @@ package internal
 type SColor uint8
 
 const (
-    WHITE = 0
-    LGRAY = 1
-    GRAY = 2
-    BLACK = 3
-    KIRBY = 4
-    RED = 5
-    ORANGE = 6
-    BROWN = 7
-    YELLOW = 8
-    lGREEN = 9
-    GREEN = 10
-    LBLUE = 11
-    TURQUOISE = 12
-    BLUE = 13
-    PINK = 14
-    VIOLET = 15
+	WHITE     SColor = 0
+	LGRAY     SColor = 1
+	GRAY      SColor = 2
+	BLACK     SColor = 3
+	KIRBY     SColor = 4
+	RED       SColor = 5
+	ORANGE    SColor = 6
+	BROWN     SColor = 7
+	YELLOW    SColor = 8
+	lGREEN    SColor = 9
+	GREEN     SColor = 10
+	LBLUE     SColor = 11
+	TURQUOISE SColor = 12
+	BLUE      SColor = 13
+	PINK      SColor = 14
+	VIOLET    SColor = 15
 )
 
 func isValidColor(color SColor) bool {
-    return color >= WHITE && color <= VIOLET
+	return color >= WHITE && color <= VIOLET
 }

@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"log"
 	"sync"
 	"testing"
 	"time"
@@ -18,13 +19,13 @@ func (d *DummySub) Notify(msg SMessage) {
 func (d DummySub) publish(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for i := 0; i < 1000; i++ {
-        d.h.Broadcast <- SMessage{pos: uint32(i), color: WHITE}
+		d.h.Broadcast <- SMessage{pos: uint32(i), color: WHITE}
 	}
 }
 
 func TestHub(t *testing.T) {
+	log.Println("Running Hub Test")
 	h := SetupHub()
-	go h.HandleMessage()
 
 	d1 := DummySub{0, h}
 	d2 := DummySub{0, h}
@@ -50,7 +51,7 @@ func TestHub(t *testing.T) {
 	wg.Wait()
 
 	// Wait for the Boradcast queue to clear up
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
 	if d1.invoked != 2000 {
 		t.Fatalf("Invocations espected: %d, got: %d", 2000, d1.invoked)

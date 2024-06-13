@@ -1,6 +1,8 @@
 package internal
 
-import "space/primitive"
+import (
+	"space/primitive"
+)
 
 type Hub struct {
 	// Communication channels only these are used by the clients to ensure safe access.
@@ -34,8 +36,10 @@ func (h Hub) HandleMessage() {
 	for {
 		select {
 		case msg := <-h.Broadcast:
-			for key := range h.Subscribers {
-				key.Notify(msg)
+			for key, val := range h.Subscribers {
+				if val {
+					key.Notify(msg)
+				}
 			}
 		case sub := <-h.Register:
 			h.Subscribers[sub] = true

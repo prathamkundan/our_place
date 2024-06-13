@@ -7,7 +7,7 @@ import (
 
 func TestMessage(t *testing.T) {
 	c := NewCanvas(10, 10)
-    msg := SMessage{pos: 99, color: WHITE}
+	msg := SMessage{pos: 99, color: WHITE}
 
 	buff, err := pack(msg, c)
 	if err != nil {
@@ -21,7 +21,7 @@ func TestMessage(t *testing.T) {
 		t.Fatalf("Message changed after packaging")
 	}
 
-    binary.LittleEndian.PutUint32(buff[:4], 100)
+	binary.LittleEndian.PutUint32(buff[:4], 100)
 	reconst, err = unpack(buff, c)
 	if err == nil {
 		t.Fatalf("Sould not be able to unpack the message")

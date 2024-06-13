@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -12,6 +13,10 @@ type SMessage struct {
 	timestamp time.Time
 	pos       uint32
 	color     SColor
+}
+
+func (s SMessage) String() string {
+	return fmt.Sprintf("User: %s, pos: %d, color: %d, time: %s", string(s.username[:]), s.pos, s.color, s.timestamp)
 }
 
 func pack(msg SMessage, a *Canvas) ([]byte, error) {
@@ -41,11 +46,11 @@ func unpack(packed []byte, a *Canvas) (SMessage, error) {
 	buf := bytes.NewReader(packed)
 
 	// Unpack username
-    var msgType [4]byte
+	var msgType [4]byte
 	binary.Read(buf, binary.LittleEndian, &msgType)
-    if string(msgType[:]) != "UPDT" {
-        return SMessage{}, errors.New("Could not unpack: Invalid message type")
-    }
+	if string(msgType[:]) != "UPDT" {
+		return SMessage{}, errors.New("Could not unpack: Invalid message type")
+	}
 
 	binary.Read(buf, binary.LittleEndian, &msg.username)
 
@@ -58,9 +63,9 @@ func unpack(packed []byte, a *Canvas) (SMessage, error) {
 	binary.Read(buf, binary.LittleEndian, &msg.color)
 
 	if msg.pos >= a.width*a.height {
-        return SMessage{}, errors.New("Could not unpack: Incorrect dimensions")
+		return SMessage{}, errors.New("Could not unpack: Incorrect dimensions")
 	} else if !isValidColor(msg.color) {
-        return SMessage{}, errors.New("Could not unpack: Invalid color")
+		return SMessage{}, errors.New("Could not unpack: Invalid color")
 	}
 
 	return msg, nil

@@ -3,6 +3,8 @@ package internal
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
+	"sync"
 )
 
 // Canvas
@@ -13,6 +15,7 @@ type Canvas struct {
 	height uint32
 	width  uint32
 	canvas []SColor
+	mu     sync.Mutex
 }
 
 func NewCanvas(height, width uint32) *Canvas {
@@ -20,29 +23,45 @@ func NewCanvas(height, width uint32) *Canvas {
 }
 
 // Implements the Subscriber interface to allow it to be notified by the hub
-func (a Canvas) Notify(msg SMessage) {
+func (a *Canvas) Notify(msg SMessage) {
 	a.Updates <- msg
 }
 
-func (a Canvas) HandleIncoming() {
+func (c *Canvas) HandleIncoming() {
 	for {
 		select {
-		case msg := <-a.Updates:
-			a.canvas[msg.pos] = msg.color
+		case msg := <-c.Updates:
+			c.mu.Lock()
+			c.canvas[msg.pos] = msg.color
+			c.mu.Unlock()
 		}
 	}
 }
 
-func (canvas Canvas) PackCanvas() []byte {
+func (c *Canvas) String() string {
+	return fmt.Sprintf("Canvas: %d x %d", c.height, c.width)
+}
+
+func (c *Canvas) at(pos int) SColor {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.canvas[pos]
+}
+
+func (c *Canvas) PackCanvas() []byte {
 	var buf bytes.Buffer
 
 	binary.Write(&buf, binary.LittleEndian, []byte("PULL"))
 
-	binary.Write(&buf, binary.LittleEndian, canvas.height)
-	binary.Write(&buf, binary.LittleEndian, canvas.width)
+	binary.Write(&buf, binary.LittleEndian, c.height)
+	binary.Write(&buf, binary.LittleEndian, c.width)
 
 	// Pack canvas array
-	for _, color := range canvas.canvas {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for _, color := range c.canvas {
 		binary.Write(&buf, binary.LittleEndian, color)
 	}
 

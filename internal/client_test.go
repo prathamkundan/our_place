@@ -16,14 +16,19 @@ var canvas = NewCanvas(10, 10)
 
 var hub = SetupHub()
 
+var client *Client = nil
+
 func handleConnection(w http.ResponseWriter, r *http.Request) {
 	conn, _ := upgrader.Upgrade(w, r, nil)
 
-	SetupClient(conn, hub, canvas)
+	c, err := SetupClient(conn, hub, canvas)
+	if err != nil {
+		log.Println("Error starting client")
+	}
+	client = c
 }
 
 func run_server() {
-	go hub.HandleMessage()
 	go canvas.HandleIncoming()
 	hub.Register <- canvas
 	http.HandleFunc("/ws", handleConnection)
@@ -31,6 +36,9 @@ func run_server() {
 }
 
 func TestClient(t *testing.T) {
+	log.Println("Running client Test")
+	canvas.canvas[1] = VIOLET
+
 	go run_server()
 	dialer := websocket.DefaultDialer
 
@@ -52,8 +60,11 @@ func TestClient(t *testing.T) {
 	}, canvas)
 
 	dummyUser.WriteMessage(websocket.BinaryMessage, action)
-	time.Sleep(10 * time.Millisecond)
-	if canvas.canvas[12] != BLACK {
+	time.Sleep(1 * time.Millisecond)
+
+	if canvas.at(posVal) != colorVal {
 		t.Fatalf("Update not propagated expected: %d got: %d", colorVal, canvas.canvas[12])
 	}
+
+	dummyUser.Close()
 }
