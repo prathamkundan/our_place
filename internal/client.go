@@ -13,7 +13,8 @@ type Client struct {
 	Hub    *Hub
 	Canvas *Canvas
 
-	interrupt chan bool
+	interrupt          chan bool
+	unsuccessful_reads int
 }
 
 func (c *Client) String() string {
@@ -27,11 +28,13 @@ func (c *Client) Notify(msg SMessage) {
 
 func SetupClient(conn *websocket.Conn, hub *Hub, canvas *Canvas) (*Client, error) {
 	c := Client{
-		Send:      make(chan (SMessage), 8),
-		Conn:      conn,
-		Hub:       hub,
-		Canvas:    canvas,
+		Send:   make(chan (SMessage), 8),
+		Conn:   conn,
+		Hub:    hub,
+		Canvas: canvas,
+
 		interrupt: make(chan bool),
+        unsuccessful_reads: 0,
 	}
 
 	hub.Register <- &c
@@ -42,6 +45,7 @@ func SetupClient(conn *websocket.Conn, hub *Hub, canvas *Canvas) (*Client, error
 		c.Conn.Close()
 		return nil, err
 	}
+    log.Println("Sent pull response to: ", c.Conn.RemoteAddr())
 
 	go c.HandleIncoming()
 	go c.HandleSocketIncoming()
@@ -53,6 +57,7 @@ func (c Client) HandleIncoming() {
 	for {
 		select {
 		case msg := <-c.Send:
+            log.Println("Trying to send: ", msg)
 			bmsg, err := pack(msg, c.Canvas)
 			if err != nil {
 				log.Printf("Got an invalid message from the hub. Please investigate.\n")
@@ -69,6 +74,7 @@ func (c Client) HandleIncoming() {
 func (c Client) HandleSocketIncoming() {
 	for {
 		msgType, msg, err := c.Conn.ReadMessage()
+        log.Println("Message from: ", c.Conn.RemoteAddr());
 
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseMessage) {
@@ -78,10 +84,20 @@ func (c Client) HandleSocketIncoming() {
 				return
 			} else {
 				log.Printf("Could not read message from %s: %v\n", c.Conn.RemoteAddr(), err)
+				if c.unsuccessful_reads >= 5 {
+					log.Println("Failed 5 times. Quitting", c.Conn.RemoteAddr(), err)
+					c.Hub.Deregister <- &c
+					c.interrupt <- true
+					return
+				}
+				c.unsuccessful_reads++
+
 			}
 		}
 		if msgType == websocket.BinaryMessage {
+		    c.unsuccessful_reads = 0
 			smsg, err := unpack(msg, c.Canvas)
+            log.Printf("Got message from %s: %s", c.Conn.RemoteAddr(),  smsg)
 			log.Println(smsg)
 			if err != nil {
 				log.Printf("Got an invalid message from client %s: %v\n", c.Conn.RemoteAddr().String(), err)

@@ -8,25 +8,32 @@ export class MouseHandler {
     private isDragging: Boolean = false;
     private dragStartX: number = 0;
     private dragStartY: number = 0;
+    private noHighlight: boolean = false;
+    // private timeDragStart = Date.now()
 
-    private view: View;
+    public setPos: React.Dispatch<React.SetStateAction<number>> | null = null;
+    public selectedPos: number[] | null = null;
+
+    private view: View | null = null;
     private curr_coord: number[] = [0, 0]
 
-    constructor(view: View) {
-        this.view = view;
+    constructor() {
     }
 
     handleMouseMove = (event: MouseEvent) => {
-        const view = this.view;
-        let pos = this.view.locToIndex(event.clientX, event.clientY)
+        const view = this.view!;
+        if (!this.noHighlight) {
+            let pos = this.view?.locToIndex(event.clientX, event.clientY)!
 
-        if (this.curr_coord !== pos) {
-            this.view.clearRect(this.curr_coord[0], this.curr_coord[1])
-            this.view.highLight(pos[0], pos[1])
-            this.curr_coord = pos
+            if (this.curr_coord !== pos) {
+                this.view?.clearRect(this.curr_coord[0], this.curr_coord[1])
+                this.view?.highLight(pos[0], pos[1])
+                this.curr_coord = pos
+            }
         }
 
         if (this.isDragging) {
+            // const time = Date.now()
             const deltaX = event.clientX - this.dragStartX;
             const deltaY = event.clientY - this.dragStartY;
             const k = view.canvas.width / view.vp_w;
@@ -34,23 +41,27 @@ export class MouseHandler {
             view.vp_oy = clamp(view.vp_oy - deltaY / k, view.UNIVERSE_WIDTH - view.vp_h, 0);
             this.dragStartX = event.clientX;
             this.dragStartY = event.clientY;
+            // if (time - this.timeDragStart > 50) {
             view.render();
+            // this.timeDragStart = Date.now();
+            // }
         }
     }
 
     handleMouseDown = (event: MouseEvent) => {
+        // this.timeDragStart = Date.now()
         this.isDragging = true;
         this.dragStartX = event.clientX;
         this.dragStartY = event.clientY;
     }
 
     handleWheel = (event: WheelEvent) => {
-        const canvas = this.view.canvas;
-        const view = this.view;
+        const canvas = this.view?.canvas!;
+        const view = this.view!;
         const wheelDelta = event.deltaY > 0 ? 1.1 : 0.9;
         const x = (event.clientX / canvas.width) * view.vp_w;
         const y = (event.clientY / canvas.height) * view.vp_h;
-        if (view.vp_w * wheelDelta > this.view.UNIVERSE_WIDTH || view.vp_w * wheelDelta < 10 * this.view.BLOCK_WIDTH
+        if (view.vp_w * wheelDelta > this.view!.UNIVERSE_WIDTH || view.vp_w * wheelDelta < 10 * this.view!.BLOCK_WIDTH
             || view.vp_h * wheelDelta > view.UNIVERSE_WIDTH || view.vp_h * wheelDelta < 10 * view.BLOCK_WIDTH) {
         }
         else {
@@ -70,17 +81,39 @@ export class MouseHandler {
         this.isDragging = false;
     }
 
-    init() {
-        this.view.canvas.addEventListener("wheel", this.handleWheel);
-        this.view.canvas.addEventListener("mouseup", this.handleMouseUp);
-        this.view.canvas.addEventListener("mousedown", this.handleMouseDown);
-        this.view.canvas.addEventListener("mousemove", this.handleMouseMove);
+    handleMouseClick = (event: MouseEvent) => {
+        const index = this.view?.locToIndex(event.clientX, event.clientY)!
+        const linearIndex = this.view?.toIndex(index[0], index[1])!;
+
+        if (this.selectedPos === null) {
+            this.noHighlight = true;
+            this.view?.highLight(index[0], index[1]);
+            this.selectedPos = index;
+            this.setPos!(linearIndex);
+        } else {
+            this.noHighlight = false;
+            this.view?.clearRect(this.selectedPos[0], this.selectedPos[1])
+            this.selectedPos = null;
+            this.setPos!(-1);
+        }
+    }
+
+    init(view: View, setPos: React.Dispatch<React.SetStateAction<number>>) {
+        this.view = view;
+        this.setPos = setPos;
+        this.view?.canvas.addEventListener("wheel", this.handleWheel);
+        this.view?.canvas.addEventListener("mouseup", this.handleMouseUp);
+        this.view?.canvas.addEventListener("mousedown", this.handleMouseDown);
+        this.view?.canvas.addEventListener("mousemove", this.handleMouseMove);
+        this.view?.canvas.addEventListener("click", this.handleMouseClick);
     }
 
     cleanup() {
-        this.view.canvas.removeEventListener("wheel", this.handleWheel)
-        this.view.canvas.removeEventListener("mouseup", this.handleMouseUp);
-        this.view.canvas.removeEventListener("mousedown", this.handleMouseDown);
-        this.view.canvas.removeEventListener("mousemove", this.handleMouseMove);
+        this.view?.canvas.removeEventListener("wheel", this.handleWheel)
+        this.view?.canvas.removeEventListener("mouseup", this.handleMouseUp);
+        this.view?.canvas.removeEventListener("mousedown", this.handleMouseDown);
+        this.view?.canvas.removeEventListener("mousemove", this.handleMouseMove);
+        this.view?.canvas.removeEventListener("click", this.handleMouseClick);
+        this.setPos!(-1)
     }
 }

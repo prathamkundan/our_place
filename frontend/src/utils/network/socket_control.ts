@@ -1,6 +1,8 @@
-import { MessageType, checkMessageType, parsePullMessage, parseUpdateMessage } from "./message";
+import { View } from "../ui/canvas";
+import { MessageType, UpdateMessage, checkMessageType, packUpdateMessage, parsePullMessage, parseUpdateMessage } from "./message";
 
 export class WebSocketController {
+    public view: View | null = null;
     public socket: WebSocket | null;
     public username: string | null;
 
@@ -9,15 +11,45 @@ export class WebSocketController {
         this.username = null
     }
 
-    onMessage(event: MessageEvent) {
-        let messageType = checkMessageType(event.data)
+    onMessage = (event: MessageEvent) => {
+        let messageType = checkMessageType(event.data as ArrayBuffer)
         console.log(messageType)
         if (messageType == MessageType.PULL) {
             let data = parsePullMessage(event.data as ArrayBuffer)
             console.log(data)
+            this.view?.setGrid(data.imageData);
         } else if (messageType == MessageType.UPDT) {
-            let data = parseUpdateMessage(event.data as ArrayBuffer)
-            console.log(data)
+            const data = parseUpdateMessage(event.data as ArrayBuffer)
+            console.log("Got Message: ", data);
+            this.view!.updateGrid(data.pos, data.color)
         }
     }
+
+    sendUpdate = (pos: number, color: number) => {
+        const updateMessage: UpdateMessage = {
+            messageType: MessageType.UPDT,
+            timestamp: BigInt(Math.ceil(Date.now() / 1000)),
+            username: this.username == null ? "" : this.username,
+            color: color,
+            pos: pos
+        }
+        console.log("Sending:", updateMessage);
+        console.log(this.socket)
+        this.socket?.send(packUpdateMessage(updateMessage));
+    }
+
+    init = (url: string | URL, view: View) => {
+        this.socket = new WebSocket(url);
+        this.socket.binaryType = "arraybuffer"
+        this.view = view;
+
+        this.socket.onmessage = this.onMessage
+    }
+
+    cleanup = () => {
+        this.socket?.close();
+        this.view = null;
+
+    }
+
 }

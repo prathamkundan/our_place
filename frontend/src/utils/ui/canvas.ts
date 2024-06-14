@@ -65,14 +65,15 @@ export class View {
         this.NUM_ROWS = rows
         this.UNIVERSE_WIDTH = block_size * this.NUM_ROWS;
         this.grid = new Uint8Array(this.NUM_ROWS * this.NUM_ROWS);
-        for (let i = 0; i < this.grid.length; i++) {
-            this.grid[i] = Math.floor(Math.random() * 16); // Random number between 0 and 15
-        }
+
         this.BG_COLOR = "#FFFFFF"
         this.BDR_COLOR = "#D9D9D9"
         this.HIGHLIGHT_COLOR = "#898E96"
+    }
 
-        this.updateGrid();
+    setGrid = (grid: Uint8Array) => {
+        this.grid = grid;
+        this.render();
     }
 
     setCanvasDimensions(width: number, height: number) {
@@ -82,7 +83,9 @@ export class View {
         this.vp_h = height;
     }
 
-    updateGrid() {
+    updateGrid(pos: number, color: number) {
+        this.grid![pos] = color;
+        this.render()
     }
 
     highLight(x: number, y: number) {
@@ -102,7 +105,7 @@ export class View {
         }
     }
 
-    clearRect(x: number, y: number) {
+    clearRect = (x: number, y: number) => {
         const k = this.canvas.width / this.vp_w
         const base_x = Math.ceil(this.vp_ox / this.BLOCK_WIDTH)
         const base_y = Math.ceil(this.vp_oy / this.BLOCK_WIDTH)
@@ -118,7 +121,7 @@ export class View {
         }
     }
 
-    drawCells() {
+    render = () => {
         let x_ind = Math.floor(this.vp_ox / this.BLOCK_WIDTH);
         const x_ind_start = x_ind
         const x_coord_start = x_ind * this.BLOCK_WIDTH - this.vp_ox;
@@ -147,7 +150,7 @@ export class View {
         }
     }
 
-    locToIndex(x: number, y: number) {
+    locToIndex = (x: number, y: number) => {
         const k = this.canvas.width / this.vp_w;
         const transformed_block_width = k * this.BLOCK_WIDTH;
         // This is the ratio by which the width of blocks is scaled when they appear on screen
@@ -166,7 +169,4 @@ export class View {
         return x * this.NUM_ROWS + y;
     }
 
-    public render() {
-        this.drawCells();
-    }
 }
