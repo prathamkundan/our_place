@@ -50,7 +50,7 @@ export class View {
     constructor(canvas: HTMLCanvasElement, block_size: number, rows: number) {
         console.log("View new")
         this.canvas = canvas
-        let parent = this.canvas.parentNode as HTMLElement
+        const parent = this.canvas.parentNode as HTMLElement
         this.canvas.height = parent.clientHeight
         this.canvas.width = parent.clientWidth;
 

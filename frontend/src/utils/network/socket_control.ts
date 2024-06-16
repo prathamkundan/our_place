@@ -13,10 +13,10 @@ export class WebSocketController {
     }
 
     onMessage = (event: MessageEvent) => {
-        let messageType = checkMessageType(event.data as ArrayBuffer)
+        const messageType = checkMessageType(event.data as ArrayBuffer)
         console.log(messageType)
         if (messageType == MessageType.PULL) {
-            let data = parsePullMessage(event.data as ArrayBuffer)
+            const data = parsePullMessage(event.data as ArrayBuffer)
             console.log(data)
             this.view?.setGrid(data.imageData);
         } else if (messageType == MessageType.UPDT) {

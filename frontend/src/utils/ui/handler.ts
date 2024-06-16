@@ -5,7 +5,7 @@ function clamp(x: number, max: number, min: number) {
 }
 
 export class MouseHandler {
-    private isDragging: Boolean = false;
+    private isDragging: boolean = false;
     private dragStartX: number = 0;
     private dragStartY: number = 0;
     private noHighlight: boolean = false;
@@ -23,7 +23,7 @@ export class MouseHandler {
     handleMouseMove = (event: MouseEvent) => {
         const view = this.view!;
         if (!this.noHighlight) {
-            let pos = this.view?.locToIndex(event.clientX, event.clientY)!
+            const pos = this.view?.locToIndex(event.clientX, event.clientY)!
 
             this.view?.clearRect(this.curr_coord[0], this.curr_coord[1])
             this.view?.highLight(pos[0], pos[1])
@@ -51,7 +51,7 @@ export class MouseHandler {
     }
 
     handleWheel = (event: WheelEvent) => {
-        if(this.view!.vp_w >= 3700 && event.deltaY > 0) return;
+        if (this.view!.vp_w >= 3700 && event.deltaY > 0) return;
         const canvas = this.view?.canvas!;
         const view = this.view!;
         const wheelDelta = event.deltaY > 0 ? 1.1 : 0.9;
@@ -59,6 +59,7 @@ export class MouseHandler {
         const y = (event.clientY / canvas.height) * view.vp_h;
         if (view.vp_w * wheelDelta > this.view!.UNIVERSE_WIDTH || view.vp_w * wheelDelta < 10 * this.view!.BLOCK_WIDTH
             || view.vp_h * wheelDelta > view.UNIVERSE_WIDTH || view.vp_h * wheelDelta < 10 * view.BLOCK_WIDTH) {
+            return
         }
         else {
             view.vp_w = Math.ceil(view.vp_w * wheelDelta)
