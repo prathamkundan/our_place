@@ -13,8 +13,8 @@ export const colorMap: { [key: number]: string } = {
     11: '#ADD8E6', // LBLUE (Light Blue)
     12: '#40E0D0', // TURQUOISE
     13: '#0000FF', // BLUE
-    14: '#FFC0CB', // PINK
-    15: '#EE82EE'  // VIOLET
+    14: '#FF1893', // PINK
+    15: '#8F00FF'  // VIOLET
 };
 
 /**
@@ -48,6 +48,7 @@ export class View {
     public HIGHLIGHT_COLOR: string
 
     constructor(canvas: HTMLCanvasElement, block_size: number, rows: number) {
+        console.log("View new")
         this.canvas = canvas
         let parent = this.canvas.parentNode as HTMLElement
         this.canvas.height = parent.clientHeight
@@ -99,10 +100,13 @@ export class View {
         const pos_y = base_y * this.BLOCK_WIDTH - this.vp_oy + (y - base_y) * this.BLOCK_WIDTH
         if (x < base_x || x > last_x || y < base_y || y > last_y) return
         else {
-            this.ctx.strokeStyle = this.grid![this.toIndex(x, y)] === 3 ? "white" :  "black"
+            this.ctx.strokeStyle = this.grid![this.toIndex(x, y)] === 3 ? "white" : "black"
             this.ctx.lineWidth = 1 * k;
             this.ctx.strokeRect(k * (pos_x + 1), k * (pos_y + 1), k * (this.BLOCK_WIDTH - 2), k * (this.BLOCK_WIDTH - 2))
         }
+
+        this.ctx.strokeStyle = "white";
+        this.ctx.lineWidth = 0;
     }
 
     clearRect = (x: number, y: number) => {
@@ -115,9 +119,13 @@ export class View {
         const pos_x = base_x * this.BLOCK_WIDTH - this.vp_ox + (x - base_x) * this.BLOCK_WIDTH
         const pos_y = base_y * this.BLOCK_WIDTH - this.vp_oy + (y - base_y) * this.BLOCK_WIDTH
         if (x < base_x || x > last_x || y < base_y || y > last_y) return
+
         else {
+            this.ctx.beginPath();
+            this.ctx.clearRect(k * pos_x, k * pos_y, k * this.BLOCK_WIDTH, k * this.BLOCK_WIDTH);
             this.ctx.fillStyle = colorMap[this.grid![this.toIndex(x, y)]];
-            this.ctx.fillRect(k * pos_x, k * pos_y, k * this.BLOCK_WIDTH, k * this.BLOCK_WIDTH)
+            this.ctx.fillRect(k * pos_x, k * pos_y, k * this.BLOCK_WIDTH, k * this.BLOCK_WIDTH);
+            this.ctx.closePath();
         }
     }
 
@@ -135,6 +143,7 @@ export class View {
         const transformed_block_width = this.BLOCK_WIDTH * k;
         // This is the ratio by which the width of blocks is scaled when they appear on screen
 
+        this.ctx.beginPath()
         for (let c = 0; c < 16; c++) {
             this.ctx.fillStyle = colorMap[c]
             for (let x = k * x_coord_start; x < this.vp_w * k; x += transformed_block_width) {
@@ -148,6 +157,7 @@ export class View {
             }
             x_ind = x_ind_start
         }
+        this.ctx.closePath()
     }
 
     locToIndex = (x: number, y: number) => {

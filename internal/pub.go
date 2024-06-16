@@ -1,4 +1,4 @@
-package primitive
+package internal
 
 // Publisher (Quite useless currently)
 /* Publisher that notifies subscribers */

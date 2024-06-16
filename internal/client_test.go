@@ -57,7 +57,7 @@ func TestClient(t *testing.T) {
 		pos:       uint32(posVal),
 		color:     SColor(colorVal),
 		timestamp: time.Now(),
-	}, canvas)
+	})
 
 	dummyUser.WriteMessage(websocket.BinaryMessage, action)
 	time.Sleep(1 * time.Millisecond)

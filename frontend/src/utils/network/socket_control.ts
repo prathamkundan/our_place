@@ -7,6 +7,7 @@ export class WebSocketController {
     public username: string | null;
 
     constructor() {
+        console.log("Socket new")
         this.socket = null
         this.username = null
     }
@@ -34,11 +35,11 @@ export class WebSocketController {
             pos: pos
         }
         console.log("Sending:", updateMessage);
-        console.log(this.socket)
         this.socket?.send(packUpdateMessage(updateMessage));
     }
 
     init = (url: string | URL, view: View) => {
+        console.log("Socket init")
         this.socket = new WebSocket(url);
         this.socket.binaryType = "arraybuffer"
         this.view = view;
@@ -47,6 +48,7 @@ export class WebSocketController {
     }
 
     cleanup = () => {
+        console.log("Socket cleanup")
         this.socket?.close();
         this.view = null;
 

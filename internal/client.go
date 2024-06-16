@@ -33,10 +33,11 @@ func SetupClient(conn *websocket.Conn, hub *Hub, canvas *Canvas) (*Client, error
 		Hub:    hub,
 		Canvas: canvas,
 
-		interrupt: make(chan bool),
-        unsuccessful_reads: 0,
+		interrupt:          make(chan bool),
+		unsuccessful_reads: 0,
 	}
 
+	log.Println("Sent pull response to: ", c.Conn.RemoteAddr())
 	hub.Register <- &c
 	err := c.Conn.WriteMessage(websocket.BinaryMessage, c.Canvas.PackCanvas())
 	if err != nil {
@@ -45,7 +46,6 @@ func SetupClient(conn *websocket.Conn, hub *Hub, canvas *Canvas) (*Client, error
 		c.Conn.Close()
 		return nil, err
 	}
-    log.Println("Sent pull response to: ", c.Conn.RemoteAddr())
 
 	go c.HandleIncoming()
 	go c.HandleSocketIncoming()
@@ -53,12 +53,12 @@ func SetupClient(conn *websocket.Conn, hub *Hub, canvas *Canvas) (*Client, error
 	return &c, nil
 }
 
-func (c Client) HandleIncoming() {
+func (c *Client) HandleIncoming() {
 	for {
 		select {
 		case msg := <-c.Send:
-            log.Println("Trying to send: ", msg)
-			bmsg, err := pack(msg, c.Canvas)
+			log.Printf("Trying to send %s: %s", c.Conn.RemoteAddr(), msg)
+			bmsg, err := pack(msg)
 			if err != nil {
 				log.Printf("Got an invalid message from the hub. Please investigate.\n")
 			} else if err := c.Conn.WriteMessage(websocket.BinaryMessage, bmsg) != nil; err {
@@ -71,23 +71,32 @@ func (c Client) HandleIncoming() {
 	}
 }
 
-func (c Client) HandleSocketIncoming() {
+func (c *Client) HandleSocketIncoming() {
 	for {
 		msgType, msg, err := c.Conn.ReadMessage()
-        log.Println("Message from: ", c.Conn.RemoteAddr());
+		log.Println("Message from: ", c.Conn.RemoteAddr())
 
 		if err != nil {
-			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseMessage) {
+			if websocket.IsCloseError(
+				err, websocket.CloseNormalClosure,
+				websocket.CloseGoingAway,
+				websocket.CloseAbnormalClosure,
+				websocket.CloseMessage,
+			) {
 				log.Printf("The client disconnected: %v\n", err)
-				c.Hub.Deregister <- &c
+				c.Hub.Deregister <- c
 				c.interrupt <- true
+				close(c.Send)
+				close(c.interrupt)
 				return
 			} else {
 				log.Printf("Could not read message from %s: %v\n", c.Conn.RemoteAddr(), err)
 				if c.unsuccessful_reads >= 5 {
 					log.Println("Failed 5 times. Quitting", c.Conn.RemoteAddr(), err)
-					c.Hub.Deregister <- &c
+					c.Hub.Deregister <- c
 					c.interrupt <- true
+					close(c.Send)
+					close(c.interrupt)
 					return
 				}
 				c.unsuccessful_reads++
@@ -95,9 +104,9 @@ func (c Client) HandleSocketIncoming() {
 			}
 		}
 		if msgType == websocket.BinaryMessage {
-		    c.unsuccessful_reads = 0
-			smsg, err := unpack(msg, c.Canvas)
-            log.Printf("Got message from %s: %s", c.Conn.RemoteAddr(),  smsg)
+			c.unsuccessful_reads = 0
+			smsg, err := unpack(msg)
+			log.Printf("Got message from %s: %s", c.Conn.RemoteAddr(), smsg)
 			log.Println(smsg)
 			if err != nil {
 				log.Printf("Got an invalid message from client %s: %v\n", c.Conn.RemoteAddr().String(), err)

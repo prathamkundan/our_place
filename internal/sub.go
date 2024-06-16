@@ -1,4 +1,4 @@
-package primitive
+package internal
 
 // Subscriber
 /* Represents a Subscriber that can be notified. */
