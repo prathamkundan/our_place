@@ -3,6 +3,7 @@ package internal
 import (
 	"testing"
 	"time"
+    . "space/internal/pubsub"
 )
 
 type DummySub struct {
@@ -14,34 +15,42 @@ func (d *DummySub) Notify(msg SMessage) {
 	d.invoked++
 }
 
+func (d *DummySub) Listen() {
+    return
+}
+
+func (d *DummySub) Interrupt() {
+    return
+}
+
 func (d *DummySub) publish(n int) {
 	for i := 0; i < n; i++ {
-		d.h.Broadcast <- SMessage{pos: uint32(i), color: WHITE}
+		d.h.broadcast <- SMessage{pos: uint32(i), color: WHITE}
 	}
-	d.h.Deregister <- d
+	d.h.deregister <- d
 }
 
 func TestHub(t *testing.T) {
 	h := &Hub{
-		Broadcast:   make(chan SMessage, 128),
-		Register:    make(chan Subscriber[SMessage]),
-		Deregister:  make(chan Subscriber[SMessage]),
-		Subscribers: make(map[Subscriber[SMessage]]bool),
+		broadcast:   make(chan SMessage, 128),
+		register:    make(chan Subscriber[SMessage]),
+		deregister:  make(chan Subscriber[SMessage]),
+		subscribers: make(map[Subscriber[SMessage]]bool),
 	}
 	go h.HandleMessage()
 
 	d1, d2 := DummySub{0, h}, DummySub{0, h}
 	n1, n2 := 10, 30
 
-	h.Register <- &d1
-	h.Register <- &d2
+	h.register <- &d1
+	h.register <- &d2
 
 	// Wait a bit to make hub process the registration
 	time.Sleep(1 * time.Millisecond)
-	if !h.Subscribers[&d1] {
+	if !h.subscribers[&d1] {
 		t.Fatalf("Could not register the subscriber: %v", d1)
 	}
-	if !h.Subscribers[&d2] {
+	if !h.subscribers[&d2] {
 		t.Fatalf("Could not register the subscriber: %v", d2)
 	}
 
@@ -56,10 +65,10 @@ func TestHub(t *testing.T) {
 	}
 
 	time.Sleep(1 * time.Millisecond)
-	if h.Subscribers[&d1] {
+	if h.subscribers[&d1] {
 		t.Fatalf("Could not deregister the subscriber: %v", d1)
 	}
-	if h.Subscribers[&d2] {
+	if h.subscribers[&d2] {
 		t.Fatalf("Could not deregister the subscriber: %v", d2)
 	}
 }

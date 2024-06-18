@@ -27,7 +27,7 @@ func (a *Canvas) Notify(msg SMessage) {
 	a.Updates <- msg
 }
 
-func (c *Canvas) HandleIncoming() {
+func (c *Canvas) Listen() {
 	for {
 		select {
 		case msg := <-c.Updates:
@@ -36,6 +36,10 @@ func (c *Canvas) HandleIncoming() {
 			c.mu.Unlock()
 		}
 	}
+}
+
+func (c *Canvas) Interrupt() {
+    close(c.Updates)
 }
 
 func (c *Canvas) String() string {

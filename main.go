@@ -33,8 +33,7 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// Maybe replace with a Register function that can call the handler for the client
-	hub.Register <- canvas
-	go canvas.HandleIncoming()
+	hub.Register(canvas)
 
 	http.HandleFunc("/ws", handleConnection)
 	log.Println("Starting server at:", 8000)
