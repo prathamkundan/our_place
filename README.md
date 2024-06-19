@@ -17,7 +17,7 @@ The connection to the websocket server exists in the `WSContext`. it is initiate
 
 ### TODO:
 - [ ] Setup authentication (preferably OAuth)
-- [ ] Define and implement the Publisher interface for the Hub
+- [x] Define and implement the Publisher interface for the Hub
 - [ ] Add handlers for different types of incoming messages for the Client struct.
 - [ ] Move all message related code to a separate package.
 - [ ] Add consistency across reloads using database/file

@@ -9,13 +9,13 @@ import (
 )
 
 type Client struct {
-	conn   *websocket.Conn
-	send   chan (SMessage)
-	Hub    Publisher[SMessage]
-	Canvas *Canvas
-
+	conn               *websocket.Conn
+	send               chan (SMessage)
 	interrupt          chan bool
 	unsuccessful_reads int
+
+	Hub    Publisher[SMessage]
+	Canvas *Canvas
 }
 
 func (c *Client) String() string {
@@ -24,25 +24,25 @@ func (c *Client) String() string {
 
 func SetupClient(conn *websocket.Conn, hub Publisher[SMessage], canvas *Canvas) (*Client, error) {
 	c := Client{
-		send:   make(chan (SMessage), 8),
-		conn:   conn,
-		Hub:    hub,
-		Canvas: canvas,
-
+		send:               make(chan (SMessage), 8),
+		conn:               conn,
 		interrupt:          make(chan bool),
 		unsuccessful_reads: 0,
+
+		Hub:    hub,
+		Canvas: canvas,
 	}
 
-	log.Println("Sent pull response to: ", c.conn.RemoteAddr())
-	hub.Register(&c)
 	err := c.conn.WriteMessage(websocket.BinaryMessage, c.Canvas.PackCanvas())
+	log.Println("Sent pull response to: ", c.conn.RemoteAddr())
+
 	if err != nil {
 		log.Printf("Could not send the initial Canvas")
-		// Closing the connection
 		c.conn.Close()
 		return nil, err
 	}
 
+	hub.Register(&c)
 	go c.HandleConnection()
 
 	return &c, nil
@@ -54,23 +54,23 @@ func (c *Client) Notify(msg SMessage) {
 }
 
 func (c *Client) Interrupt() {
-    c.interrupt <- true
-    close(c.interrupt)
+	c.interrupt <- true
+	close(c.interrupt)
 }
 
 func (c *Client) Listen() {
 	for {
 		select {
 		case msg := <-c.send:
-			log.Printf("Trying to send %s: %s", c.conn.RemoteAddr(), msg)
-			bmsg, err := pack(msg)
+			log.Printf("Sending %s: %s", c.conn.RemoteAddr(), msg)
+			bmsg, err := pack(msg, c.Canvas)
 			if err != nil {
 				log.Printf("Got an invalid message from the hub. Please investigate.\n")
 			} else if err := c.conn.WriteMessage(websocket.BinaryMessage, bmsg) != nil; err {
 				log.Printf("Could not write message: %v\n", err)
 			}
 		case <-c.interrupt:
-			log.Printf("%s Deregistered from hub. Stopping.\n", c.conn.RemoteAddr())
+			log.Printf("%s deregistered from hub. Stopping.\n", c.conn.RemoteAddr())
 			return
 		}
 	}
@@ -106,9 +106,8 @@ func (c *Client) HandleConnection() {
 		}
 		if msgType == websocket.BinaryMessage {
 			c.unsuccessful_reads = 0
-			smsg, err := unpack(msg)
+			smsg, err := unpack(msg, c.Canvas)
 			log.Printf("Got message from %s: %s", c.conn.RemoteAddr(), smsg)
-			log.Println(smsg)
 			if err != nil {
 				log.Printf("Got an invalid message from client %s: %v\n", c.conn.RemoteAddr().String(), err)
 			} else {

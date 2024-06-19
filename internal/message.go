@@ -19,8 +19,8 @@ func (s SMessage) String() string {
 	return fmt.Sprintf("User: %s, pos: %d, color: %d, time: %s", string(s.username[:]), s.pos, s.color, s.timestamp)
 }
 
-func pack(msg SMessage) ([]byte, error) {
-	if msg.pos >= 512*512 {
+func pack(msg SMessage, c *Canvas) ([]byte, error) {
+	if msg.pos >= c.width * c.height {
 		return nil, errors.New("Could not pack into byte array due to incorrect dimensions")
 	} else if !isValidColor(msg.color) {
 		return nil, errors.New("Could not pack into byte array due to invalid color")
@@ -41,7 +41,7 @@ func pack(msg SMessage) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func unpack(packed []byte) (SMessage, error) {
+func unpack(packed []byte, c *Canvas) (SMessage, error) {
 	var msg SMessage
 	buf := bytes.NewReader(packed)
 
@@ -62,7 +62,7 @@ func unpack(packed []byte) (SMessage, error) {
 	binary.Read(buf, binary.LittleEndian, &msg.pos)
 	binary.Read(buf, binary.LittleEndian, &msg.color)
 
-	if msg.pos >= 512*512 {
+	if msg.pos >= c.width * c.height {
 		return SMessage{}, errors.New("Could not unpack: Incorrect dimensions")
 	} else if !isValidColor(msg.color) {
 		return SMessage{}, errors.New("Could not unpack: Invalid color")

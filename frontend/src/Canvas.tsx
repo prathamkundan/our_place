@@ -35,8 +35,8 @@ const Canvas = function() {
     return (
         <>
             {wsController === null ?
-                <div className="w-screen h-screen flex items-center justify-center"><Loader /></div> :
-                <div id="container" className="relative h-screen w-screen">
+                <div className="w-full h-full flex items-center justify-center"><Loader /></div> :
+                <div id="container" className="relative h-full w-full">
                     <canvas ref={canvasRef} id="canvas"></canvas>
                     <div className="absolute bottom-0 w-screen">
                         {selectedPos > -1 && <div className="grid grid-flow-col grid-rows-2 lg:grid-rows-1 gap-2 bg-white w-fit mx-auto p-3 justify-center rounded-t-xl shadow-2xl">

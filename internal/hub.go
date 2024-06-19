@@ -34,19 +34,18 @@ func SetupHub() *Hub {
 }
 
 func (h *Hub) Register(s Subscriber[SMessage]) {
-    h.register <- s
-    go s.Listen()
+	h.register <- s
+	go s.Listen()
 }
 
 func (h *Hub) Deregister(s Subscriber[SMessage]) {
-    h.deregister <- s
-    s.Interrupt()
+	h.deregister <- s
+	s.Interrupt()
 }
 
 func (h *Hub) Broadcast(msg SMessage) {
-    h.broadcast <- msg
+	h.broadcast <- msg
 }
-
 
 func (h *Hub) HandleMessage() {
 	for {

@@ -1,9 +1,9 @@
 package internal
 
 import (
+	. "space/internal/pubsub"
 	"testing"
 	"time"
-    . "space/internal/pubsub"
 )
 
 type DummySub struct {
@@ -16,11 +16,11 @@ func (d *DummySub) Notify(msg SMessage) {
 }
 
 func (d *DummySub) Listen() {
-    return
+	return
 }
 
 func (d *DummySub) Interrupt() {
-    return
+	return
 }
 
 func (d *DummySub) publish(n int) {

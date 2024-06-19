@@ -29,7 +29,7 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 }
 
 func run_server() {
-    hub.Register(canvas)
+	hub.Register(canvas)
 	http.HandleFunc("/ws", handleConnection)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
@@ -56,7 +56,7 @@ func TestClient(t *testing.T) {
 		pos:       uint32(posVal),
 		color:     SColor(colorVal),
 		timestamp: time.Now(),
-	})
+	}, canvas)
 
 	dummyUser.WriteMessage(websocket.BinaryMessage, action)
 	time.Sleep(1 * time.Millisecond)
