@@ -52,7 +52,7 @@ func TestClient(t *testing.T) {
 	}
 
 	colorVal, posVal := BLACK, 12
-	action, _ := pack(SMessage{
+	action, _ := pack(Message{
 		pos:       uint32(posVal),
 		color:     SColor(colorVal),
 		timestamp: time.Now(),

@@ -10,11 +10,11 @@ import (
 
 type Client struct {
 	conn               *websocket.Conn
-	send               chan (SMessage)
+	send               chan (Message)
 	interrupt          chan bool
 	unsuccessful_reads int
 
-	Hub    Publisher[SMessage]
+	Hub    Publisher[Message]
 	Canvas *Canvas
 }
 
@@ -22,9 +22,9 @@ func (c *Client) String() string {
 	return fmt.Sprintf("Client: %s", c.conn.RemoteAddr())
 }
 
-func SetupClient(conn *websocket.Conn, hub Publisher[SMessage], canvas *Canvas) (*Client, error) {
+func SetupClient(conn *websocket.Conn, hub Publisher[Message], canvas *Canvas) (*Client, error) {
 	c := Client{
-		send:               make(chan (SMessage), 8),
+		send:               make(chan (Message), 8),
 		conn:               conn,
 		interrupt:          make(chan bool),
 		unsuccessful_reads: 0,
@@ -49,7 +49,7 @@ func SetupClient(conn *websocket.Conn, hub Publisher[SMessage], canvas *Canvas) 
 }
 
 // Implementing the interface Subscriber.
-func (c *Client) Notify(msg SMessage) {
+func (c *Client) Notify(msg Message) {
 	c.send <- msg
 }
 
