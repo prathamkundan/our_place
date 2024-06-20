@@ -1,7 +1,7 @@
-package internal
+package core
 
 import (
-	. "space/internal/pubsub"
+	. "space/internal/core/pubsub"
 	"testing"
 	"time"
 )

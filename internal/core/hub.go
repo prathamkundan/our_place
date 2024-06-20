@@ -1,8 +1,8 @@
-package internal
+package core
 
 import (
 	"log"
-	. "space/internal/pubsub"
+	. "space/internal/core/pubsub"
 )
 
 type Hub struct {

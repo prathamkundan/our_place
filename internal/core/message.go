@@ -1,4 +1,4 @@
-package internal
+package core
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ func (s SMessage) String() string {
 }
 
 func pack(msg SMessage, c *Canvas) ([]byte, error) {
-	if msg.pos >= c.width * c.height {
+	if msg.pos >= c.width*c.height {
 		return nil, errors.New("Could not pack into byte array due to incorrect dimensions")
 	} else if !isValidColor(msg.color) {
 		return nil, errors.New("Could not pack into byte array due to invalid color")
@@ -62,7 +62,7 @@ func unpack(packed []byte, c *Canvas) (SMessage, error) {
 	binary.Read(buf, binary.LittleEndian, &msg.pos)
 	binary.Read(buf, binary.LittleEndian, &msg.color)
 
-	if msg.pos >= c.width * c.height {
+	if msg.pos >= c.width*c.height {
 		return SMessage{}, errors.New("Could not unpack: Incorrect dimensions")
 	} else if !isValidColor(msg.color) {
 		return SMessage{}, errors.New("Could not unpack: Invalid color")

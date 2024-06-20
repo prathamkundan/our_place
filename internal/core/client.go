@@ -1,9 +1,9 @@
-package internal
+package core
 
 import (
 	"fmt"
 	"log"
-	. "space/internal/pubsub"
+	. "space/internal/core/pubsub"
 
 	"github.com/gorilla/websocket"
 )
