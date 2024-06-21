@@ -21,7 +21,7 @@ var client *Client = nil
 func handleConnection(w http.ResponseWriter, r *http.Request) {
 	conn, _ := upgrader.Upgrade(w, r, nil)
 
-	c, err := SetupClient(conn, hub, canvas)
+	c, err := SetupClient(conn, hub, canvas, true, "")
 	if err != nil {
 		log.Println("Error starting client")
 	}
