@@ -1,5 +1,4 @@
-package internal
-
+package core
 
 import (
 	"encoding/binary"
@@ -8,7 +7,7 @@ import (
 
 func TestMessage(t *testing.T) {
 	c := NewCanvas(10, 10)
-	msg := SMessage{pos: 99, color: WHITE}
+	msg := Message{pos: 99, color: WHITE}
 
 	buff, err := pack(msg, c)
 	if err != nil {

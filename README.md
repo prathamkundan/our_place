@@ -16,7 +16,7 @@ Contains a react app that visualizes the thing. It is just a canvas that with mo
 The connection to the websocket server exists in the `WSContext`. it is initiated in the `Canvas` component.
 
 ### TODO:
-- [ ] Setup authentication (preferably OAuth)
+- [x] Setup authentication (preferably OAuth)
 - [x] Define and implement the Publisher interface for the Hub
 - [ ] Add handlers for different types of incoming messages for the Client struct.
 - [ ] Move all message related code to a separate package.

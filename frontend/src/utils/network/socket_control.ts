@@ -7,21 +7,20 @@ export class WebSocketController {
     public username: string | null;
 
     constructor() {
-        console.log("Socket new")
         this.socket = null
         this.username = null
     }
 
     onMessage = (event: MessageEvent) => {
         const messageType = checkMessageType(event.data as ArrayBuffer)
-        console.log(messageType)
+        // console.log(messageType)
         if (messageType == MessageType.PULL) {
             const data = parsePullMessage(event.data as ArrayBuffer)
-            console.log(data)
+            // console.log(data)
             this.view?.setGrid(data.imageData);
         } else if (messageType == MessageType.UPDT) {
             const data = parseUpdateMessage(event.data as ArrayBuffer)
-            console.log("Got Message: ", data);
+            // console.log("Got Message: ", data);
             this.view!.updateGrid(data.pos, data.color)
         }
     }
@@ -30,16 +29,15 @@ export class WebSocketController {
         const updateMessage: UpdateMessage = {
             messageType: MessageType.UPDT,
             timestamp: BigInt(Math.ceil(Date.now() / 1000)),
-            username: this.username == null ? "" : this.username,
+            username: this.username == null ? "" : this.username.slice(0, 64),
             color: color,
             pos: pos
         }
-        console.log("Sending:", updateMessage);
+        // console.log("Sending:", updateMessage);
         this.socket?.send(packUpdateMessage(updateMessage));
     }
 
     init = (url: string | URL, view: View) => {
-        console.log("Socket init")
         this.socket = new WebSocket(url);
         this.socket.binaryType = "arraybuffer"
         this.view = view;
@@ -48,7 +46,6 @@ export class WebSocketController {
     }
 
     cleanup = () => {
-        console.log("Socket cleanup")
         this.socket?.close();
         this.view = null;
 

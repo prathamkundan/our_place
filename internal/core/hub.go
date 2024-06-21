@@ -1,49 +1,49 @@
-package internal
+package core
 
 import (
 	"log"
-	. "space/internal/pubsub"
+	. "space/internal/core/pubsub"
 )
 
 type Hub struct {
 	// Communication channels only these are used by the clients to ensure safe access.
 
 	// broadcast channel messages sent to this are sent to all subscribers. This needs to be buffered
-	broadcast chan SMessage
+	broadcast chan Message
 
 	// Channel to register subscribers
-	register chan Subscriber[SMessage]
+	register chan Subscriber[Message]
 
 	// Channel to deregister subscribers
-	deregister chan Subscriber[SMessage]
+	deregister chan Subscriber[Message]
 
 	// Map to keep track of registered subscribers. Do not access on references.
-	subscribers map[Subscriber[SMessage]]bool
+	subscribers map[Subscriber[Message]]bool
 }
 
 func SetupHub() *Hub {
 	hub := &Hub{
-		broadcast:   make(chan SMessage, 128),
-		register:    make(chan Subscriber[SMessage]),
-		deregister:  make(chan Subscriber[SMessage]),
-		subscribers: make(map[Subscriber[SMessage]]bool),
+		broadcast:   make(chan Message, 128),
+		register:    make(chan Subscriber[Message]),
+		deregister:  make(chan Subscriber[Message]),
+		subscribers: make(map[Subscriber[Message]]bool),
 	}
 	go hub.HandleMessage()
 
 	return hub
 }
 
-func (h *Hub) Register(s Subscriber[SMessage]) {
+func (h *Hub) Register(s Subscriber[Message]) {
 	h.register <- s
 	go s.Listen()
 }
 
-func (h *Hub) Deregister(s Subscriber[SMessage]) {
+func (h *Hub) Deregister(s Subscriber[Message]) {
 	h.deregister <- s
 	s.Interrupt()
 }
 
-func (h *Hub) Broadcast(msg SMessage) {
+func (h *Hub) Broadcast(msg Message) {
 	h.broadcast <- msg
 }
 

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import { View, colorMap } from "./utils/ui/canvas"
-import { MouseHandler } from "./utils/ui/handler";
-import { useWebSocket } from "./context/WSContext";
+import { View, colorMap } from "../utils/ui/canvas"
+import { MouseHandler } from "../utils/ui/handler";
+import { useWebSocket } from "../context/WSContext";
 import Loader from "./Loading";
+import { useAuth } from "../context/AuthContext";
 
 const Canvas = function() {
     const BLOCK_WIDTH = 10;
+    const { user } = useAuth();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [selectedPos, setSelectedPos] = useState<number>(-1);
     const [seletedColor, setSelectedColor] = useState<number>(-1);
@@ -21,6 +23,12 @@ const Canvas = function() {
         wsController?.init("ws://localhost:8000/ws", view);
 
         mouseHandler.init(view, setSelectedPos)
+        if (user === null) {
+            mouseHandler.noHighlight = true
+        } else {
+            wsController.username = user.name
+        }
+
         view.render()
 
         return () => {
@@ -39,7 +47,7 @@ const Canvas = function() {
                 <div id="container" className="relative h-full w-full">
                     <canvas ref={canvasRef} id="canvas"></canvas>
                     <div className="absolute bottom-0 w-screen">
-                        {selectedPos > -1 && <div className="grid grid-flow-col grid-rows-2 lg:grid-rows-1 gap-2 bg-white w-fit mx-auto p-3 justify-center rounded-t-xl shadow-2xl">
+                        {user != null && selectedPos > -1 && <div className="grid grid-flow-col grid-rows-2 lg:grid-rows-1 gap-2 bg-white w-fit mx-auto p-3 justify-center rounded-t-xl shadow-2xl">
                             {Object.entries(colorMap).map(([key, value], index) =>
                                 <button
                                     key={key}

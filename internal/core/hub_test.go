@@ -1,7 +1,7 @@
-package internal
+package core
 
 import (
-	. "space/internal/pubsub"
+	. "space/internal/core/pubsub"
 	"testing"
 	"time"
 )
@@ -11,7 +11,7 @@ type DummySub struct {
 	h       *Hub
 }
 
-func (d *DummySub) Notify(msg SMessage) {
+func (d *DummySub) Notify(msg Message) {
 	d.invoked++
 }
 
@@ -25,17 +25,17 @@ func (d *DummySub) Interrupt() {
 
 func (d *DummySub) publish(n int) {
 	for i := 0; i < n; i++ {
-		d.h.broadcast <- SMessage{pos: uint32(i), color: WHITE}
+		d.h.broadcast <- Message{pos: uint32(i), color: WHITE}
 	}
 	d.h.deregister <- d
 }
 
 func TestHub(t *testing.T) {
 	h := &Hub{
-		broadcast:   make(chan SMessage, 128),
-		register:    make(chan Subscriber[SMessage]),
-		deregister:  make(chan Subscriber[SMessage]),
-		subscribers: make(map[Subscriber[SMessage]]bool),
+		broadcast:   make(chan Message, 128),
+		register:    make(chan Subscriber[Message]),
+		deregister:  make(chan Subscriber[Message]),
+		subscribers: make(map[Subscriber[Message]]bool),
 	}
 	go h.HandleMessage()
 

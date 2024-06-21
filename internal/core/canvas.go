@@ -1,4 +1,4 @@
-package internal
+package core
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 // Canvas
 /* Represents the state of the canvas in memory */
 type Canvas struct {
-	Updates chan (SMessage)
+	Updates chan (Message)
 
 	height uint32
 	width  uint32
@@ -20,7 +20,7 @@ type Canvas struct {
 
 func NewCanvas(height, width uint32) *Canvas {
 	return &Canvas{
-		Updates: make(chan SMessage, 128),
+		Updates: make(chan Message, 128),
 		height:  height,
 		width:   width,
 		canvas:  make([]SColor, height*width),
@@ -28,7 +28,7 @@ func NewCanvas(height, width uint32) *Canvas {
 }
 
 // Implements the Subscriber interface to allow it to be notified by the hub
-func (a *Canvas) Notify(msg SMessage) {
+func (a *Canvas) Notify(msg Message) {
 	a.Updates <- msg
 }
 

@@ -1,4 +1,4 @@
-package internal
+package core
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ var client *Client = nil
 func handleConnection(w http.ResponseWriter, r *http.Request) {
 	conn, _ := upgrader.Upgrade(w, r, nil)
 
-	c, err := SetupClient(conn, hub, canvas)
+	c, err := SetupClient(conn, hub, canvas, true, "")
 	if err != nil {
 		log.Println("Error starting client")
 	}
@@ -52,7 +52,7 @@ func TestClient(t *testing.T) {
 	}
 
 	colorVal, posVal := BLACK, 12
-	action, _ := pack(SMessage{
+	action, _ := pack(Message{
 		pos:       uint32(posVal),
 		color:     SColor(colorVal),
 		timestamp: time.Now(),
