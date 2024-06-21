@@ -47,7 +47,7 @@ func HandleGoogleCallback(c *gin.Context) {
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "token",
 		Value:    jwt,
-		HttpOnly: true,
+		HttpOnly: false,
 		Secure:   true,
 		Path:     "/",
 	})
