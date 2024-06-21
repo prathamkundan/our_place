@@ -1,8 +1,8 @@
 package service
 
 import (
-	"os"
 	"net/http"
+	"os"
 	"space/internal/core"
 
 	"github.com/gorilla/websocket"
@@ -18,11 +18,13 @@ var HubInst *core.Hub
 
 var CanvasInst *core.Canvas
 
+var JwtSecret string
+
 func InitServices() {
 	CanvasInst = core.NewCanvas(512, 512)
 	HubInst = core.SetupHub()
 
-    HubInst.Register(CanvasInst)
+	HubInst.Register(CanvasInst)
 
 	Upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -37,4 +39,6 @@ func InitServices() {
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
+
+	JwtSecret = os.Getenv("JWT_SECRET")
 }

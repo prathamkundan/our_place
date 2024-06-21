@@ -21,7 +21,7 @@ function App() {
             <WSProvider>
                 <div className="relative h-screen w-screen">
                     <div className="absolute top-0 right-0 z-10 p-4">
-                        <a href={googleOAuth()} target="_blank" className="rounded-full ring-2 ring-black px-3 hover:bg-black hover:text-white">
+                        <a href={googleOAuth()} className="rounded-full ring-2 ring-black px-3 hover:bg-black hover:text-white">
                             Signin / Register
                         </a>
                     </div>

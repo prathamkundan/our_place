@@ -14,23 +14,27 @@ type Client struct {
 	interrupt          chan bool
 	unsuccessful_reads int
 
-	Hub    Publisher[Message]
-	Canvas *Canvas
+	Hub        Publisher[Message]
+	Canvas     *Canvas
+	Authorized bool
+	Username   string
 }
 
 func (c *Client) String() string {
 	return fmt.Sprintf("Client: %s", c.conn.RemoteAddr())
 }
 
-func SetupClient(conn *websocket.Conn, hub Publisher[Message], canvas *Canvas) (*Client, error) {
+func SetupClient(conn *websocket.Conn, hub Publisher[Message], canvas *Canvas, authorized bool, username string) (*Client, error) {
 	c := Client{
 		send:               make(chan (Message), 8),
 		conn:               conn,
 		interrupt:          make(chan bool),
 		unsuccessful_reads: 0,
 
-		Hub:    hub,
-		Canvas: canvas,
+		Hub:        hub,
+		Canvas:     canvas,
+		Authorized: authorized,
+		Username:   username,
 	}
 
 	err := c.conn.WriteMessage(websocket.BinaryMessage, c.Canvas.PackCanvas())
@@ -101,10 +105,9 @@ func (c *Client) HandleConnection() {
 					return
 				}
 				c.unsuccessful_reads++
-
 			}
 		}
-		if msgType == websocket.BinaryMessage {
+		if msgType == websocket.BinaryMessage && c.Authorized {
 			c.unsuccessful_reads = 0
 			smsg, err := unpack(msg, c.Canvas)
 			log.Printf("Got message from %s: %s", c.conn.RemoteAddr(), smsg)

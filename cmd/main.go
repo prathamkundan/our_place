@@ -15,7 +15,7 @@ func init() {
 		log.Fatal("Could not load environment variables from .env")
 	}
 
-    service.InitServices()
+	service.InitServices()
 }
 
 func main() {
@@ -26,5 +26,3 @@ func main() {
 
 	r.Run(":8000")
 }
-
-
