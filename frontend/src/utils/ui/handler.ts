@@ -8,17 +8,15 @@ export class MouseHandler {
     private isDragging: boolean = false;
     private dragStartX: number = 0;
     private dragStartY: number = 0;
-    private noHighlight: boolean = false;
 
+    public noHighlight: boolean = false;
     public setPos: React.Dispatch<React.SetStateAction<number>> | null = null;
     public selectedPos: number[] | null = null;
 
     private view: View | null = null;
     private curr_coord: number[] = [0, 0]
 
-    constructor() {
-        console.log("Handler new")
-    }
+    constructor() {}
 
     handleMouseMove = (event: MouseEvent) => {
         const view = this.view!;
@@ -96,7 +94,6 @@ export class MouseHandler {
     }
 
     init(view: View, setPos: React.Dispatch<React.SetStateAction<number>>) {
-        console.log("Handler init")
         this.view = view;
         this.setPos = setPos;
         this.view?.canvas.addEventListener("wheel", this.handleWheel);
@@ -107,7 +104,6 @@ export class MouseHandler {
     }
 
     cleanup() {
-        console.log("Handler cleanup")
         this.view?.canvas.removeEventListener("wheel", this.handleWheel)
         this.view?.canvas.removeEventListener("mouseup", this.handleMouseUp);
         this.view?.canvas.removeEventListener("mousedown", this.handleMouseDown);

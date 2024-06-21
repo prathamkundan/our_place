@@ -48,7 +48,6 @@ export class View {
     public HIGHLIGHT_COLOR: string
 
     constructor(canvas: HTMLCanvasElement, block_size: number, rows: number) {
-        console.log("View new")
         this.canvas = canvas
         const parent = this.canvas.parentNode as HTMLElement
         this.canvas.height = parent.clientHeight
